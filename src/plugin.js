@@ -74,8 +74,6 @@ class SuperResolution extends Plugin {
       if (e.pageX) start = e.pageX;
       else if (e.clientX) start = e.clientX;
 
-      console.log('fuck me');
-
       document.body.onmousemove = e => {
         e = e || window.event;
         let end = 0;

@@ -7,7 +7,6 @@ import { mat4 } from 'gl-matrix';
 var loaded_count = 0;
 // will set to true when video can be copied to texture
 var copyVideo = false;
-var filterActive = true;
 
 /**
  * Utility functions
@@ -73,7 +72,7 @@ function initShaderProgram(gl, vsSource, fsSource) {
  * WebGL Shaders
  */
 
-function initInvertProgram(gl, width, height) {
+function initInvertProgram(gl) {
   var copyFragShader = `#version 300 es
 
   precision highp float;
@@ -83,8 +82,9 @@ function initInvertProgram(gl, width, height) {
 
   void main() {
     copyOut.a = 1.0;
-    vec4 colors = texture(originalSampler, vec2(gl_FragCoord[0] / ${width}.0, gl_FragCoord[1] / ${height}.0));
-    copyOut.rgb = vec3(1.0 - colors.r, 1.0 - colors.g, 1.0 - colors.b);
+    vec4 colors = texture(originalSampler, vec2(gl_FragCoord[0] / 640.0, gl_FragCoord[1] / 266.0));
+    //copyOut.rgb = vec3(1.0 - colors.r, 1.0 - colors.g, 1.0 - colors.b);
+    copyOut.rgb = colors.rgb;
   }
   `;
 
@@ -93,13 +93,26 @@ function initInvertProgram(gl, width, height) {
   return initShaderProgram(gl, vsSource, copyFragShader);
 }
 
-function initCopyProgram(gl, width, height) {
+function initCopyProgram(gl) {
   var copyFragShader = `#version 300 es
   precision highp float;
   uniform sampler2D originalSampler;
+
+  uniform vec2 videoRes;
+  uniform vec4 renderArea;
+
   layout(location = 0) out vec4 copyOut;
+
   void main() {
-    copyOut = texture(originalSampler, vec2(gl_FragCoord[0] / ${width}.0, 1.0 - gl_FragCoord[1] / ${height}.0));
+    if (gl_FragCoord[0] < renderArea.x) {
+      copyOut = vec4(0.0, 0.0, 0.0, 1.0);
+    } else if (gl_FragCoord[0] > renderArea.z) {
+      copyOut = vec4(0.0, 0.0, 0.0, 1.0);
+    } else if ((gl_FragCoord[1] < renderArea.y) || (gl_FragCoord[1] > renderArea.w)) {
+      copyOut = vec4(0.0, 0.0, 0.0, 1.0);
+    } else {
+      copyOut = texture(originalSampler, vec2((gl_FragCoord[0] - renderArea.x) / videoRes.x, 1.0 - ((gl_FragCoord[1] - renderArea.y) / videoRes.y)));
+    }
   }
   `;
 
@@ -394,6 +407,13 @@ function drawScene(gl, programInfo, buffers, texture) {
     }
   }
 
+  if (programInfo.renderArea) {
+    gl.uniform4fv(programInfo.uniformLocations.renderAreaLocation, programInfo.renderArea);
+  }
+  if (programInfo.videoRes) {
+    gl.uniform2fv(programInfo.uniformLocations.videoResLocation, programInfo.videoRes);
+  }
+
   {
     const vertexCount = 6;
     const type = gl.UNSIGNED_SHORT;
@@ -402,14 +422,64 @@ function drawScene(gl, programInfo, buffers, texture) {
   }
 }
 
+function resizeCanvas(canvas) {
+  // Lookup the size the browser is displaying the canvas.
+  var displayWidth  = canvas.clientWidth;
+  var displayHeight = canvas.clientHeight;
+ 
+  // Check if the canvas is not the same size.
+  if (canvas.width  != displayWidth ||
+      canvas.height != displayHeight) {
+ 
+    // Make the canvas the same size
+    canvas.width  = displayWidth;
+    canvas.height = displayHeight;
+  }
+}
+
+function fitBoundingBox(w, h, canvasW, canvasH) {
+  var left = Math.floor((canvasW - w) / 2.0);
+  var right = canvasW - left;
+  var top = Math.floor((canvasH - h) / 2.0);
+  var bottom = canvasH - top;
+
+  return [left, top, right, bottom];
+}
+
+function scaleToFit(videoWidth, videoHeight, canvasWidth, canvasHeight) {
+  var curWidth = videoWidth;
+  var curHeight = videoHeight;
+  var isVertical = false;
+
+  if (videoHeight > videoWidth) {
+    isVertical = true;
+    curWidth = videoWidth;
+    curHeight = videoHeight;
+  }
+
+  var widthScale = canvasWidth / videoWidth;
+  var heightScale = canvasHeight / videoHeight;
+  var scaleFactor = Math.min(widthScale, heightScale);
+
+  curWidth = Math.ceil(scaleFactor * curWidth);
+  curHeight = Math.ceil(scaleFactor * curHeight);
+
+  if (isVertical) {
+    return [[curHeight, curWidth], fitBoundingBox(curHeight, curWidth, canvasWidth, canvasHeight)];
+  }
+  return [[curWidth, curHeight], fitBoundingBox(curWidth, curHeight, canvasWidth, canvasHeight)];
+}
+
 //
 // Start here
 //
 export function main(player, canvas) {
   const video = player.tech().el();
   const gl = canvas.getContext('webgl2');
-  const height = canvas.offsetHeight;
-  const width = canvas.offsetWidth;
+  var videoHeight = video.videoHeight || 100;
+  var videoWidth = video.videoWidth || 100;
+  var renderArea = [0, 0, 100, 100];
+  var videoRes = [100, 100];
 
   player.on('playing', () => {
     copyVideo = true;
@@ -432,17 +502,18 @@ export function main(player, canvas) {
     gl.getExtension('MOZ_OES_texture_float') ||
     gl.getExtension('WEBKIT_OES_texture_float');
   gl.getExtension('EXT_color_buffer_float');
+  gl.getExtension('OES_texture_float_linear');
 
   // Initialize the textures
 
   // Input
-  const input_texture = initTexture(gl);
+  var input_texture = initTexture(gl);
 
   // W_reconstruct: in 642x288x4 out 1920x858x3
-  const invert_texture = createTexture(gl, width, height, true);
+  var invert_texture = createTexture(gl, videoWidth, videoHeight, false);
 
   console.log('Invert program');
-  const invert_program = initInvertProgram(gl, width, height);
+  const invert_program = initInvertProgram(gl);
   const invert_program_info = {
     program: invert_program,
     attribLocations: {
@@ -460,8 +531,8 @@ export function main(player, canvas) {
   };
 
   console.log('Render program');
-  const render_program = initCopyProgram(gl, width, height);
-  const render_program_info = {
+  const render_program = initCopyProgram(gl);
+  var render_program_info = {
     program: render_program,
     attribLocations: {
       vertexPosition: gl.getAttribLocation(render_program, 'aVertexPosition')
@@ -471,11 +542,24 @@ export function main(player, canvas) {
         render_program,
         'uProjectionMatrix'
       ),
-      modelViewMatrix: gl.getUniformLocation(render_program, 'uModelViewMatrix')
+      modelViewMatrix: gl.getUniformLocation(render_program, 'uModelViewMatrix'),
+      renderAreaLocation: gl.getUniformLocation(render_program, 'renderArea'),
+      videoResLocation: gl.getUniformLocation(render_program, 'videoRes')
     },
     samplers: [gl.getUniformLocation(render_program, 'originalSampler')],
-    textures: [invert_texture]
+    textures: [invert_texture],
+    renderArea: renderArea,
+    videoRes: videoRes
   };
+
+  player.on("loadedmetadata", (x) => {
+    console.log("Video res:", video.videoWidth, video.videoHeight);
+    videoWidth = video.videoWidth;
+    videoHeight = video.videoHeight;
+
+    invert_texture = createTexture(gl, videoWidth, videoHeight, false);
+    render_program_info.textures = [invert_texture];
+  });
 
   // Here's where we call the routine that builds all the
   // objects we'll be drawing.
@@ -493,6 +577,12 @@ export function main(player, canvas) {
     if (copyVideo) {
       updateTexture(gl, input_texture, video);
     }
+    resizeCanvas(canvas);
+
+    var renderSettings = scaleToFit(videoWidth, videoHeight, canvas.clientWidth, canvas.clientHeight);
+    console.log("ScaledVideoResolution:", renderSettings);
+    render_program_info.videoRes = renderSettings[0];
+    render_program_info.renderArea = renderSettings[1];
 
     gl.bindTexture(gl.TEXTURE_2D, input_texture);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
@@ -509,16 +599,18 @@ export function main(player, canvas) {
     gl.drawBuffers([
       gl.COLOR_ATTACHMENT0 // gl_FragData[0]
     ]);
-    gl.viewport(0, 0, width, height);
+    gl.viewport(0, 0, videoWidth, videoHeight);
+
+    console.log("canvas size", canvas.width, canvas.height);
 
     drawScene(gl, invert_program_info, buffers);
 
     gl.bindTexture(gl.TEXTURE_2D, invert_texture);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, width, height);
+    gl.viewport(0, 0, canvas.offsetWidth, canvas.offsetHeight);
 
     drawScene(gl, render_program_info, buffers);
 

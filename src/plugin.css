@@ -16,7 +16,16 @@
   --font-size: 7;
 }
 
+html, body {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+}
+
 .video-js {
+  min-height: 100%;
+  width: 100%;
+
   & .vjs-sr-demo-handle {
     height: 30px;
     width: 10px;
@@ -32,12 +41,13 @@
     clip-path: inset(0% 0% 0% 50%);
     height: 100%;
     width: 100%;
-    background-color: blue;
+    background-color: black;
     opacity: 50%;
 
     & canvas {
       height: 100%;
       width: 100%;
+      object-fit: contain;
     }
   }
 

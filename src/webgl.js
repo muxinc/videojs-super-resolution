@@ -679,7 +679,7 @@ function initTexture(gl) {
   const border = 0;
   const srcFormat = gl.RGBA;
   const srcType = gl.UNSIGNED_BYTE;
-  const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+  const pixel = new Uint8Array([0, 0, 0, 255]); // opaque blue
   gl.texImage2D(
     gl.TEXTURE_2D,
     level,
@@ -871,9 +871,9 @@ function drawScene(gl, programInfo, buffers, texture) {
 
 function resizeCanvas(canvas) {
   // Lookup the size the browser is displaying the canvas.
-  var displayWidth  = canvas.clientWidth;
-  var displayHeight = canvas.clientHeight;
- 
+  var displayWidth  = Math.floor(canvas.clientWidth * window.devicePixelRatio);
+  var displayHeight = Math.floor(canvas.clientHeight * window.devicePixelRatio);
+
   // Check if the canvas is not the same size.
   if (canvas.width  != displayWidth ||
       canvas.height != displayHeight) {
@@ -1180,7 +1180,6 @@ export function main(player, canvas) {
   const w_conv2_2_fb = gl.createFramebuffer();
   const w_reconstruct_fb = gl.createFramebuffer();
 
-
   var elapsedTime = 0;
   var frameCount = 0;
   var lastTime = new Date().getTime();
@@ -1193,7 +1192,8 @@ export function main(player, canvas) {
     }
     resizeCanvas(canvas);
 
-    var renderSettings = scaleToFit(videoWidth, videoHeight, canvas.clientWidth, canvas.clientHeight);
+    var renderSettings = scaleToFit(videoWidth, videoHeight, canvas.width, canvas.height);
+    console.log("renderSettings:", renderSettings);
 
     padProgramInfo.videoRes = [videoWidth, videoHeight];
     conv1_1_program_info.videoRes = [videoWidth, videoHeight];
@@ -1201,6 +1201,7 @@ export function main(player, canvas) {
     conv2_1_program_info.videoRes = [videoWidth, videoHeight];
     conv2_2_program_info.videoRes = [videoWidth, videoHeight];
     reconstruct_program_info.videoRes = [videoWidth, videoHeight];
+
     render_program_info.videoRes = renderSettings[0];
     render_program_info.renderArea = renderSettings[1];
 
@@ -1307,7 +1308,7 @@ export function main(player, canvas) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-    gl.viewport(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+    gl.viewport(0, 0, canvas.width, canvas.height);
 
     drawScene(gl, render_program_info, buffers);
 

@@ -5,11 +5,19 @@ import { raw_weights } from './weights';
  * Weights functions
  */
 
+const layer_1_depth = 16; // Convolution depth
+const layer_1_width = 5; // Convolution width
+
+const layer_2_depth = 8;
+const layer_2_width = 3;
+
+const reconstruct_width = 3;
+
 function get_conv1_1_weights() {
   var conv1_1_weights = [];
 
-  for (var y = 0; y < 5; y++) {
-    for (var outw = 0; outw < 8; outw++) {
+  for (var y = 0; y < layer_1_width; y++) {
+    for (var outw = 0; outw < layer_1_depth; outw++) {
       for (var inw = 0; inw < 3; inw++) {
         conv1_1_weights.push(raw_weights["W_conv1_1"][y][0][inw][outw]);
       }
@@ -22,9 +30,9 @@ function get_conv1_1_weights() {
 function get_conv1_2_weights() {
   var conv1_2_weights = [];
 
-  for (var x = 0; x < 5; x++) {
-    for (var outw = 0; outw < 8; outw++) {
-      for (var inw = 0; inw < 8; inw++) {
+  for (var x = 0; x < layer_1_width; x++) {
+    for (var outw = 0; outw < layer_1_depth; outw++) {
+      for (var inw = 0; inw < layer_1_depth; inw++) {
         conv1_2_weights.push(raw_weights["W_conv1_2"][0][x][inw][outw]);
       }
     }
@@ -40,9 +48,9 @@ function get_conv1_biases() {
 function get_conv2_1_weights() {
   var conv2_1_weights = [];
 
-  for (var y = 0; y < 3; y++) {
-    for (var outw = 0; outw < 4; outw++) {
-      for (var inw = 0; inw < 8; inw++) {
+  for (var y = 0; y < layer_2_width; y++) {
+    for (var outw = 0; outw < layer_2_depth; outw++) {
+      for (var inw = 0; inw < layer_1_depth; inw++) {
         conv2_1_weights.push(raw_weights["W_conv2_1"][y][0][inw][outw]);
       }
     }
@@ -54,9 +62,9 @@ function get_conv2_1_weights() {
 function get_conv2_2_weights() {
   var conv2_2_weights = [];
 
-  for (var x = 0; x < 3; x++) {
-    for (var outw = 0; outw < 4; outw++) {
-      for (var inw = 0; inw < 4; inw++) {
+  for (var x = 0; x < layer_2_width; x++) {
+    for (var outw = 0; outw < layer_2_depth; outw++) {
+      for (var inw = 0; inw < layer_2_depth; inw++) {
         conv2_2_weights.push(raw_weights["W_conv2_2"][0][x][inw][outw]);
       }
     }
@@ -77,10 +85,10 @@ function get_reconstruct_weights() {
 
   for (var out_y = 0; out_y < 3; out_y++) {
     for (var out_x = 0; out_x < 3; out_x++) {
-      for (var j = 0; j < 3; j++) {
-        for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < reconstruct_width; j++) {
+        for (var i = 0; i < reconstruct_width; i++) {
           for (var out_pixel = 0; out_pixel < 3; out_pixel++) {
-            for (var z = 0; z < 4; z++) {
+            for (var z = 0; z < layer_2_depth; z++) {
               conv_reconstruct_weights.push(raw_weights["W_reconstruct"][j][i][z][out_y * 9 + out_x * 3 + out_pixel]);
             }
           }
@@ -231,7 +239,7 @@ function initPadProgram(gl, padding) {
 
 // Vertical conv2d
 // in: width x height x 3
-// out: width x (height-4) x 8
+// out: width x (height-4) x 16
 // kernel size 1x5
 function init_conv1_1_program(gl) {
   var coords = [];
@@ -242,14 +250,22 @@ function init_conv1_1_program(gl) {
     coords.push(`vec2 coords_${i} = vec2(outX / inWidth, (outY + ${i}.0) / inHeight);`);
     inputs.push(`vec4 in${i} = texture(padSampler, coords_${i});`);
 
-    operations.push(`out0.r += dot(in${i}.rgb, weights[${i * 8 + 0}].rgb);`);
-    operations.push(`out0.g += dot(in${i}.rgb, weights[${i * 8 + 1}].rgb);`);
-    operations.push(`out0.b += dot(in${i}.rgb, weights[${i * 8 + 2}].rgb);`);
-    operations.push(`out0.a += dot(in${i}.rgb, weights[${i * 8 + 3}].rgb);`);
-    operations.push(`out1.r += dot(in${i}.rgb, weights[${i * 8 + 4}].rgb);`);
-    operations.push(`out1.g += dot(in${i}.rgb, weights[${i * 8 + 5}].rgb);`);
-    operations.push(`out1.b += dot(in${i}.rgb, weights[${i * 8 + 6}].rgb);`);
-    operations.push(`out1.a += dot(in${i}.rgb, weights[${i * 8 + 7}].rgb);`);
+    operations.push(`out0.r += dot(in${i}.rgb, weights[${i * layer_1_depth +  0}].rgb);`);
+    operations.push(`out0.g += dot(in${i}.rgb, weights[${i * layer_1_depth +  1}].rgb);`);
+    operations.push(`out0.b += dot(in${i}.rgb, weights[${i * layer_1_depth +  2}].rgb);`);
+    operations.push(`out0.a += dot(in${i}.rgb, weights[${i * layer_1_depth +  3}].rgb);`);
+    operations.push(`out1.r += dot(in${i}.rgb, weights[${i * layer_1_depth +  4}].rgb);`);
+    operations.push(`out1.g += dot(in${i}.rgb, weights[${i * layer_1_depth +  5}].rgb);`);
+    operations.push(`out1.b += dot(in${i}.rgb, weights[${i * layer_1_depth +  6}].rgb);`);
+    operations.push(`out1.a += dot(in${i}.rgb, weights[${i * layer_1_depth +  7}].rgb);`);
+    operations.push(`out2.r += dot(in${i}.rgb, weights[${i * layer_1_depth +  8}].rgb);`);
+    operations.push(`out2.g += dot(in${i}.rgb, weights[${i * layer_1_depth +  9}].rgb);`);
+    operations.push(`out2.b += dot(in${i}.rgb, weights[${i * layer_1_depth + 10}].rgb);`);
+    operations.push(`out2.a += dot(in${i}.rgb, weights[${i * layer_1_depth + 11}].rgb);`);
+    operations.push(`out3.r += dot(in${i}.rgb, weights[${i * layer_1_depth + 12}].rgb);`);
+    operations.push(`out3.g += dot(in${i}.rgb, weights[${i * layer_1_depth + 13}].rgb);`);
+    operations.push(`out3.b += dot(in${i}.rgb, weights[${i * layer_1_depth + 14}].rgb);`);
+    operations.push(`out3.a += dot(in${i}.rgb, weights[${i * layer_1_depth + 15}].rgb);`);
   }
 
   var conv1_1_shader = `#version 300 es
@@ -257,15 +273,19 @@ function init_conv1_1_program(gl) {
   precision highp float;
 
   uniform sampler2D padSampler;
-  uniform vec3 weights[${5 * 8}];
+  uniform vec3 weights[${layer_1_width * layer_1_depth}];
   uniform vec2 videoRes;
 
   layout(location = 0) out vec4 out0;
   layout(location = 1) out vec4 out1;
+  layout(location = 2) out vec4 out2;
+  layout(location = 3) out vec4 out3;
 
   void main() {
     out0 = vec4(0.0, 0.0, 0.0, 0.0);
     out1 = vec4(0.0, 0.0, 0.0, 0.0);
+    out2 = vec4(0.0, 0.0, 0.0, 0.0);
+    out3 = vec4(0.0, 0.0, 0.0, 0.0);
     float outX = float(gl_FragCoord[0]);
     float outY = float(gl_FragCoord[1]);
 
@@ -298,19 +318,30 @@ function init_conv1_2_program(gl) {
   var inputs = [];
   var operations = [];
 
-  for (var i = 0; i < 5; i++) {
+  for (var i = 0; i < layer_1_width; i++) {
     coords.push(`vec2 coords_${i} = vec2((outX + ${i}.0) / inWidth, outY / inHeight);`);
+
     inputs.push(`vec4 in${i}_0 = texture(layer1Sampler, coords_${i});`);
     inputs.push(`vec4 in${i}_1 = texture(layer2Sampler, coords_${i});`);
+    inputs.push(`vec4 in${i}_2 = texture(layer3Sampler, coords_${i});`);
+    inputs.push(`vec4 in${i}_3 = texture(layer4Sampler, coords_${i});`);
 
-    operations.push(`out0.r += dot(in${i}_0, weights[${i * 8 * 2 +  0}]) + dot(in${i}_1, weights[${i * 8 * 2 +  1}]);`);
-    operations.push(`out0.g += dot(in${i}_0, weights[${i * 8 * 2 +  2}]) + dot(in${i}_1, weights[${i * 8 * 2 +  3}]);`);
-    operations.push(`out0.b += dot(in${i}_0, weights[${i * 8 * 2 +  4}]) + dot(in${i}_1, weights[${i * 8 * 2 +  5}]);`);
-    operations.push(`out0.a += dot(in${i}_0, weights[${i * 8 * 2 +  6}]) + dot(in${i}_1, weights[${i * 8 * 2 +  7}]);`);
-    operations.push(`out1.r += dot(in${i}_0, weights[${i * 8 * 2 +  8}]) + dot(in${i}_1, weights[${i * 8 * 2 +  9}]);`);
-    operations.push(`out1.g += dot(in${i}_0, weights[${i * 8 * 2 + 10}]) + dot(in${i}_1, weights[${i * 8 * 2 + 11}]);`);
-    operations.push(`out1.b += dot(in${i}_0, weights[${i * 8 * 2 + 12}]) + dot(in${i}_1, weights[${i * 8 * 2 + 13}]);`);
-    operations.push(`out1.a += dot(in${i}_0, weights[${i * 8 * 2 + 14}]) + dot(in${i}_1, weights[${i * 8 * 2 + 15}]);`);
+    operations.push(`out0.r += dot(in${i}_0, weights[${i * layer_1_depth * 4 +  0}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 +  1}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 +  2}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 +  3}]);`);
+    operations.push(`out0.g += dot(in${i}_0, weights[${i * layer_1_depth * 4 +  4}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 +  5}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 +  6}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 +  7}]);`);
+    operations.push(`out0.b += dot(in${i}_0, weights[${i * layer_1_depth * 4 +  8}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 +  9}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 10}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 11}]);`);
+    operations.push(`out0.a += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 12}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 13}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 14}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 15}]);`);
+    operations.push(`out1.r += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 16}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 17}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 18}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 19}]);`);
+    operations.push(`out1.g += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 20}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 21}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 22}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 23}]);`);
+    operations.push(`out1.b += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 24}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 25}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 26}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 27}]);`);
+    operations.push(`out1.a += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 28}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 29}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 30}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 31}]);`);
+    operations.push(`out2.r += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 32}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 33}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 34}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 35}]);`);
+    operations.push(`out2.g += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 36}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 37}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 38}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 39}]);`);
+    operations.push(`out2.b += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 40}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 41}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 42}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 43}]);`);
+    operations.push(`out2.a += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 44}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 45}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 46}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 47}]);`);
+    operations.push(`out3.r += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 48}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 49}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 50}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 51}]);`);
+    operations.push(`out3.g += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 52}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 53}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 54}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 55}]);`);
+    operations.push(`out3.b += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 56}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 57}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 58}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 59}]);`);
+    operations.push(`out3.a += dot(in${i}_0, weights[${i * layer_1_depth * 4 + 60}]) + dot(in${i}_1, weights[${i * layer_1_depth * 4 + 61}]) + dot(in${i}_2, weights[${i * layer_1_depth * 4 + 62}]) + dot(in${i}_3, weights[${i * layer_1_depth * 4 + 63}]);`);
   }
 
   var conv1_2_shader = `#version 300 es
@@ -319,17 +350,23 @@ function init_conv1_2_program(gl) {
 
   uniform sampler2D layer1Sampler;
   uniform sampler2D layer2Sampler;
+  uniform sampler2D layer3Sampler;
+  uniform sampler2D layer4Sampler;
 
-  uniform vec4 weights[${5 * 8 * 2}];
-  uniform vec4 biases[2];
+  uniform vec4 weights[${layer_1_width * layer_1_depth * 4}];
+  uniform vec4 biases[4];
   uniform vec2 videoRes;
 
   layout(location = 0) out vec4 out0;
   layout(location = 1) out vec4 out1;
+  layout(location = 2) out vec4 out2;
+  layout(location = 3) out vec4 out3;
 
   void main() {
     out0 = vec4(0.0, 0.0, 0.0, 0.0);
     out1 = vec4(0.0, 0.0, 0.0, 0.0);
+    out2 = vec4(0.0, 0.0, 0.0, 0.0);
+    out3 = vec4(0.0, 0.0, 0.0, 0.0);
 
     float outX = float(gl_FragCoord[0]);
     float outY = float(gl_FragCoord[1]);
@@ -348,6 +385,8 @@ ${operations.join("\n")}
 
     out0 = max(out0 + biases[0], 0.0);
     out1 = max(out1 + biases[1], 0.0);
+    out2 = max(out2 + biases[2], 0.0);
+    out3 = max(out3 + biases[3], 0.0);
   }
   `;
 
@@ -358,24 +397,30 @@ ${operations.join("\n")}
 
 
 // Vertical conv2d
-// in: width x height x 8
-// out: width x (height - 2) x 4
+// in: width x height x 16
+// out: width x (height - 2) x 8
 // kernel size 1 x 3
 function init_conv2_1_program(gl) {
   var coords = [];
   var inputs = [];
   var operations = [];
 
-  for (var i = 0; i < 3; i++) {
+  for (var i = 0; i < layer_2_width; i++) {
     coords.push(`vec2 coords_${i} = vec2(outX / inWidth, (outY + ${i}.0) / inHeight);`);
     
     inputs.push(`vec4 in${i}_0 = texture(layer1Sampler, coords_${i});`);
     inputs.push(`vec4 in${i}_1 = texture(layer2Sampler, coords_${i});`);
+    inputs.push(`vec4 in${i}_2 = texture(layer3Sampler, coords_${i});`);
+    inputs.push(`vec4 in${i}_3 = texture(layer4Sampler, coords_${i});`);
 
-    operations.push(`out0.r += dot(in${i}_0, weights[${i * 4 * 2 + 0}]) + dot(in${i}_1, weights[${i * 4 * 2 + 1}]);`);
-    operations.push(`out0.g += dot(in${i}_0, weights[${i * 4 * 2 + 2}]) + dot(in${i}_1, weights[${i * 4 * 2 + 3}]);`);
-    operations.push(`out0.b += dot(in${i}_0, weights[${i * 4 * 2 + 4}]) + dot(in${i}_1, weights[${i * 4 * 2 + 5}]);`);
-    operations.push(`out0.a += dot(in${i}_0, weights[${i * 4 * 2 + 6}]) + dot(in${i}_1, weights[${i * 4 * 2 + 7}]);`);
+    operations.push(`out0.r += dot(in${i}_0, weights[${i * layer_2_depth * 4 +  0}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 +  1}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 +  2}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 +  3}]);`);
+    operations.push(`out0.g += dot(in${i}_0, weights[${i * layer_2_depth * 4 +  4}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 +  5}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 +  6}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 +  7}]);`);
+    operations.push(`out0.b += dot(in${i}_0, weights[${i * layer_2_depth * 4 +  8}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 +  9}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 + 10}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 + 11}]);`);
+    operations.push(`out0.a += dot(in${i}_0, weights[${i * layer_2_depth * 4 + 12}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 + 13}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 + 14}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 + 15}]);`);
+    operations.push(`out1.r += dot(in${i}_0, weights[${i * layer_2_depth * 4 + 16}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 + 17}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 + 18}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 + 19}]);`);
+    operations.push(`out1.g += dot(in${i}_0, weights[${i * layer_2_depth * 4 + 20}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 + 21}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 + 22}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 + 23}]);`);
+    operations.push(`out1.b += dot(in${i}_0, weights[${i * layer_2_depth * 4 + 24}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 + 25}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 + 26}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 + 27}]);`);
+    operations.push(`out1.a += dot(in${i}_0, weights[${i * layer_2_depth * 4 + 28}]) + dot(in${i}_1, weights[${i * layer_2_depth * 4 + 29}]) + dot(in${i}_2, weights[${i * layer_2_depth * 4 + 30}]) + dot(in${i}_3, weights[${i * layer_2_depth * 4 + 31}]);`);
   }
 
   var conv2_1_shader = `#version 300 es
@@ -384,14 +429,18 @@ function init_conv2_1_program(gl) {
 
   uniform sampler2D layer1Sampler;
   uniform sampler2D layer2Sampler;
+  uniform sampler2D layer3Sampler;
+  uniform sampler2D layer4Sampler;
   uniform vec2 videoRes;
 
-  uniform vec4 weights[${3 * 4 * 2}];
+  uniform vec4 weights[${layer_2_width * layer_2_depth * 4}];
 
   layout(location = 0) out vec4 out0;
+  layout(location = 1) out vec4 out1;
 
   void main() {
     out0 = vec4(0.0, 0.0, 0.0, 0.0);
+    out1 = vec4(0.0, 0.0, 0.0, 0.0);
     
     float outX = float(gl_FragCoord[0]);
     float outY = float(gl_FragCoord[1]);
@@ -426,12 +475,18 @@ function init_conv2_2_program(gl) {
 
   for (var i = 0; i < 3; i++) {
     coords.push(`vec2 coords_${i} = vec2((outX + ${i}.0) / inWidth, outY / inHeight);`);
-    inputs.push(`vec4 in${i}_0 = texture(layer1Sampler, coords_${i});`);
 
-    operations.push(`out0.r += dot(in${i}_0, weights[${i * 4 + 0}]);`);
-    operations.push(`out0.g += dot(in${i}_0, weights[${i * 4 + 1}]);`);
-    operations.push(`out0.b += dot(in${i}_0, weights[${i * 4 + 2}]);`);
-    operations.push(`out0.a += dot(in${i}_0, weights[${i * 4 + 3}]);`);
+    inputs.push(`vec4 in${i}_0 = texture(layer1Sampler, coords_${i});`);
+    inputs.push(`vec4 in${i}_1 = texture(layer2Sampler, coords_${i});`);
+
+    operations.push(`out0.r += dot(in${i}_0, weights[${i * 8 +  0}]) + dot(in${i}_1, weights[${i * 8 +  1}]);`);
+    operations.push(`out0.g += dot(in${i}_0, weights[${i * 8 +  2}]) + dot(in${i}_1, weights[${i * 8 +  3}]);`);
+    operations.push(`out0.b += dot(in${i}_0, weights[${i * 8 +  4}]) + dot(in${i}_1, weights[${i * 8 +  5}]);`);
+    operations.push(`out0.a += dot(in${i}_0, weights[${i * 8 +  6}]) + dot(in${i}_1, weights[${i * 8 +  7}]);`);
+    operations.push(`out1.r += dot(in${i}_0, weights[${i * 8 +  8}]) + dot(in${i}_1, weights[${i * 8 +  9}]);`);
+    operations.push(`out1.g += dot(in${i}_0, weights[${i * 8 + 10}]) + dot(in${i}_1, weights[${i * 8 + 11}]);`);
+    operations.push(`out1.b += dot(in${i}_0, weights[${i * 8 + 12}]) + dot(in${i}_1, weights[${i * 8 + 13}]);`);
+    operations.push(`out1.a += dot(in${i}_0, weights[${i * 8 + 14}]) + dot(in${i}_1, weights[${i * 8 + 15}]);`);
   }
 
   var conv2_2_shader = `#version 300 es
@@ -440,14 +495,16 @@ function init_conv2_2_program(gl) {
 
   uniform sampler2D layer1Sampler;
 
-  uniform vec4 weights[${3 * 4}];
-  uniform vec4 biases[1];
+  uniform vec4 weights[${layer_2_width * layer_2_depth * 2}];
+  uniform vec4 biases[2];
   uniform vec2 videoRes;
 
   layout(location = 0) out vec4 out0;
+  layout(location = 1) out vec4 out1;
 
   void main() {
     out0 = vec4(0.0, 0.0, 0.0, 0.0);
+    out1 = vec4(0.0, 0.0, 0.0, 0.0);
 
     float outX = float(gl_FragCoord[0]);
     float outY = float(gl_FragCoord[1]);
@@ -465,6 +522,7 @@ ${inputs.join("\n")}
 ${operations.join("\n")}
 
     out0 = max(out0 + biases[0], 0.0);
+    out1 = max(out1 + biases[1], 0.0);
   }
   `;
 
@@ -487,30 +545,20 @@ function init_reconstruct_program(gl, inWidth, inHeight) {
     for (var i = 0; i < 3; i++) {
       // Todo
       coords.push(`vec2 coords_${j}_${i} = vec2((inX + ${i}.0) / inWidth, (inY + ${j}.0) / inHeight);`);
-      inputs.push(`vec4 in_${j}_${i} = texture(layer1Sampler, coords_${j}_${i});`);
+
+      inputs.push(`vec4 in_${j}_${i}_0 = texture(layer1Sampler, coords_${j}_${i});`);
+      inputs.push(`vec4 in_${j}_${i}_1 = texture(layer2Sampler, coords_${j}_${i});`);
       
-      weights.push(`vec4 w_${j}_${i}_0 = weights[iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3} + 0];`);
-      weights.push(`vec4 w_${j}_${i}_1 = weights[iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3} + 1];`);
-      weights.push(`vec4 w_${j}_${i}_2 = weights[iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3} + 2];`);
+      weights.push(`vec4 w_${j}_${i}_0_0 = weights[2 * (iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3}) + 0];`);
+      weights.push(`vec4 w_${j}_${i}_0_1 = weights[2 * (iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3}) + 1];`);
+      weights.push(`vec4 w_${j}_${i}_1_0 = weights[2 * (iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3}) + 2];`);
+      weights.push(`vec4 w_${j}_${i}_1_1 = weights[2 * (iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3}) + 3];`);
+      weights.push(`vec4 w_${j}_${i}_2_0 = weights[2 * (iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3}) + 4];`);
+      weights.push(`vec4 w_${j}_${i}_2_1 = weights[2 * (iOutY * 81 + iOutX * 27 + ${j * 9 + i * 3}) + 5];`);
 
-      operations.push(`r_val += in_${j}_${i}.r * w_${j}_${i}_0.r;`);
-      operations.push(`r_val += in_${j}_${i}.g * w_${j}_${i}_0.g;`);
-      operations.push(`r_val += in_${j}_${i}.b * w_${j}_${i}_0.b;`);
-      operations.push(`r_val += in_${j}_${i}.a * w_${j}_${i}_0.a;`);
-
-      operations.push(`g_val += in_${j}_${i}.r * w_${j}_${i}_1.r;`);
-      operations.push(`g_val += in_${j}_${i}.g * w_${j}_${i}_1.g;`);
-      operations.push(`g_val += in_${j}_${i}.b * w_${j}_${i}_1.b;`);
-      operations.push(`g_val += in_${j}_${i}.a * w_${j}_${i}_1.a;`);
-
-      operations.push(`b_val += in_${j}_${i}.r * w_${j}_${i}_2.r;`);
-      operations.push(`b_val += in_${j}_${i}.g * w_${j}_${i}_2.g;`);
-      operations.push(`b_val += in_${j}_${i}.b * w_${j}_${i}_2.b;`);
-      operations.push(`b_val += in_${j}_${i}.a * w_${j}_${i}_2.a;`);
-
-      //operations.push(`r_val += dot(in_${j}_${i}, w_${j}_${i}_0);`);
-      //operations.push(`g_val += dot(in_${j}_${i}, w_${j}_${i}_1);`);
-      //operations.push(`b_val += dot(in_${j}_${i}, w_${j}_${i}_2);`);
+      operations.push(`r_val += dot(in_${j}_${i}_0, w_${j}_${i}_0_0) + dot(in_${j}_${i}_1, w_${j}_${i}_0_1);`);
+      operations.push(`g_val += dot(in_${j}_${i}_0, w_${j}_${i}_1_0) + dot(in_${j}_${i}_1, w_${j}_${i}_1_1);`);
+      operations.push(`b_val += dot(in_${j}_${i}_0, w_${j}_${i}_2_0) + dot(in_${j}_${i}_1, w_${j}_${i}_2_1);`);
     }
   }
 
@@ -520,11 +568,12 @@ function init_reconstruct_program(gl, inWidth, inHeight) {
 
   uniform sampler2D originalSampler;
   uniform sampler2D layer1Sampler;
+  uniform sampler2D layer2Sampler;
   uniform vec2 videoRes;
 
   uniform sampler2D maskSampler;
 
-  uniform vec4 weights[${3 * 3 * 3 * 9}];
+  uniform vec4 weights[${3 * 3 * 3 * 9 * 2}];
   uniform vec3 biases[9];
 
   out vec4 out0;

@@ -479,14 +479,14 @@ function init_conv2_2_program(gl) {
     inputs.push(`vec4 in${i}_0 = texture(layer1Sampler, coords_${i});`);
     inputs.push(`vec4 in${i}_1 = texture(layer2Sampler, coords_${i});`);
 
-    operations.push(`out0.r += dot(in${i}_0, weights[${i * 8 +  0}]) + dot(in${i}_1, weights[${i * 8 +  1}]);`);
-    operations.push(`out0.g += dot(in${i}_0, weights[${i * 8 +  2}]) + dot(in${i}_1, weights[${i * 8 +  3}]);`);
-    operations.push(`out0.b += dot(in${i}_0, weights[${i * 8 +  4}]) + dot(in${i}_1, weights[${i * 8 +  5}]);`);
-    operations.push(`out0.a += dot(in${i}_0, weights[${i * 8 +  6}]) + dot(in${i}_1, weights[${i * 8 +  7}]);`);
-    operations.push(`out1.r += dot(in${i}_0, weights[${i * 8 +  8}]) + dot(in${i}_1, weights[${i * 8 +  9}]);`);
-    operations.push(`out1.g += dot(in${i}_0, weights[${i * 8 + 10}]) + dot(in${i}_1, weights[${i * 8 + 11}]);`);
-    operations.push(`out1.b += dot(in${i}_0, weights[${i * 8 + 12}]) + dot(in${i}_1, weights[${i * 8 + 13}]);`);
-    operations.push(`out1.a += dot(in${i}_0, weights[${i * 8 + 14}]) + dot(in${i}_1, weights[${i * 8 + 15}]);`);
+    operations.push(`out0.r += dot(in${i}_0, weights[${i * 8 * 2 +  0}]) + dot(in${i}_1, weights[${i * 8 * 2 +  1}]);`);
+    operations.push(`out0.g += dot(in${i}_0, weights[${i * 8 * 2 +  2}]) + dot(in${i}_1, weights[${i * 8 * 2 +  3}]);`);
+    operations.push(`out0.b += dot(in${i}_0, weights[${i * 8 * 2 +  4}]) + dot(in${i}_1, weights[${i * 8 * 2 +  5}]);`);
+    operations.push(`out0.a += dot(in${i}_0, weights[${i * 8 * 2 +  6}]) + dot(in${i}_1, weights[${i * 8 * 2 +  7}]);`);
+    operations.push(`out1.r += dot(in${i}_0, weights[${i * 8 * 2 +  8}]) + dot(in${i}_1, weights[${i * 8 * 2 +  9}]);`);
+    operations.push(`out1.g += dot(in${i}_0, weights[${i * 8 * 2 + 10}]) + dot(in${i}_1, weights[${i * 8 * 2 + 11}]);`);
+    operations.push(`out1.b += dot(in${i}_0, weights[${i * 8 * 2 + 12}]) + dot(in${i}_1, weights[${i * 8 * 2 + 13}]);`);
+    operations.push(`out1.a += dot(in${i}_0, weights[${i * 8 * 2 + 14}]) + dot(in${i}_1, weights[${i * 8 * 2 + 15}]);`);
   }
 
   var conv2_2_shader = `#version 300 es
@@ -606,8 +606,8 @@ ${weights.join("\n")}
     // Operations
 ${operations.join("\n")}
 
-    out0.rgb = (vec3(r_val, g_val, b_val) + biases[3 * iOutY + iOutX].rgb) / 255.0;
-    out0.rgb += texture(originalSampler, vec2(gl_FragCoord[0] / (videoRes.x * 3.0), gl_FragCoord[1] / (videoRes.y * 3.0))).rgb;
+    out0.rgb = (vec3(r_val, g_val, b_val) + biases[3 * iOutY + iOutX].rgb) / 255.0 + 0.5;
+    //out0.rgb += texture(originalSampler, vec2(gl_FragCoord[0] / (videoRes.x * 3.0), gl_FragCoord[1] / (videoRes.y * 3.0))).rgb;
     out0.rgb = clamp(out0.rgb, 0.0, 1.0);
   }
   `;
@@ -1253,7 +1253,7 @@ export function main(player, canvas) {
     resizeCanvas(canvas);
 
     var renderSettings = scaleToFit(videoWidth, videoHeight, canvas.width, canvas.height);
-    console.log("renderSettings:", renderSettings);
+    // console.log("renderSettings:", renderSettings);
 
     padProgramInfo.videoRes = [videoWidth, videoHeight];
     conv1_1_program_info.videoRes = [videoWidth, videoHeight];

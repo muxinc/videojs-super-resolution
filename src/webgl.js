@@ -494,6 +494,7 @@ function init_conv2_2_program(gl) {
   precision highp float;
 
   uniform sampler2D layer1Sampler;
+  uniform sampler2D layer2Sampler;
 
   uniform vec4 weights[${layer_2_width * layer_2_depth * 2}];
   uniform vec4 biases[2];
@@ -1008,19 +1009,22 @@ export function main(player, canvas) {
   // Padded input
   var pad_texture = createTexture(gl, videoWidth + 8, videoHeight + 8, true);
 
-  // W_conv1_1: in 648x294x3 out 648x290x8
   var conv1_1_texture1 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
   var conv1_1_texture2 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
+  var conv1_1_texture3 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
+  var conv1_1_texture4 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
 
-  // W_conv1_2: in 648x290x8 out 644x290x8
   var conv1_2_texture1 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
   var conv1_2_texture2 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
+  var conv1_2_texture3 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
+  var conv1_2_texture4 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
 
-  // W_conv2_1: in 644x290x8 out 644x288x4
-  var conv2_1_texture = createTexture(gl, videoWidth + 4, videoHeight + 2, true);
+  var conv2_1_texture1 = createTexture(gl, videoWidth + 4, videoHeight + 2, true);
+  var conv2_1_texture2 = createTexture(gl, videoWidth + 4, videoHeight + 2, true);
 
-  // W_conv2_2: in 644x288x4 out 642x288x4
-  var conv2_2_texture = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
+  // W_conv2_2: in 644x288x4 out (w+4)x(h+4)x4
+  var conv2_2_texture1 = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
+  var conv2_2_texture2 = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
 
   // W_reconstruct: in 642x288x4 out 1920x858x3
   var reconstruct_texture = createTexture(gl, videoWidth * 3, videoHeight * 3, true);
@@ -1081,8 +1085,10 @@ export function main(player, canvas) {
     samplers: [
       gl.getUniformLocation(conv1_2_program, 'layer1Sampler'),
       gl.getUniformLocation(conv1_2_program, 'layer2Sampler'),
+      gl.getUniformLocation(conv1_2_program, 'layer3Sampler'),
+      gl.getUniformLocation(conv1_2_program, 'layer4Sampler'),
     ],
-    textures: [conv1_1_texture1, conv1_1_texture2],
+    textures: [conv1_1_texture1, conv1_1_texture2, conv1_1_texture3, conv1_1_texture4],
     weights: get_conv1_2_weights(),
     biases: get_conv1_biases(),
     videoRes: videoRes
@@ -1103,9 +1109,11 @@ export function main(player, canvas) {
     },
     samplers: [
       gl.getUniformLocation(conv2_1_program, 'layer1Sampler'),
-      gl.getUniformLocation(conv2_1_program, 'layer2Sampler')
+      gl.getUniformLocation(conv2_1_program, 'layer2Sampler'),
+      gl.getUniformLocation(conv2_1_program, 'layer3Sampler'),
+      gl.getUniformLocation(conv2_1_program, 'layer4Sampler')
     ],
-    textures: [conv1_2_texture1, conv1_2_texture2],
+    textures: [conv1_2_texture1, conv1_2_texture2, conv1_2_texture3, conv1_2_texture4],
     weights: get_conv2_1_weights(),
     videoRes: videoRes
   };
@@ -1125,9 +1133,10 @@ export function main(player, canvas) {
       videoResLocation: gl.getUniformLocation(conv2_2_program, 'videoRes')
     },
     samplers: [
-      gl.getUniformLocation(conv2_2_program, 'layer1Sampler')
+      gl.getUniformLocation(conv2_2_program, 'layer1Sampler'),
+      gl.getUniformLocation(conv2_2_program, 'layer2Sampler')
     ],
-    textures: [conv2_1_texture],
+    textures: [conv2_1_texture1, conv2_1_texture2],
     weights: get_conv2_2_weights(),
     biases: get_conv2_biases(),
     videoRes: videoRes
@@ -1150,8 +1159,9 @@ export function main(player, canvas) {
     samplers: [
       gl.getUniformLocation(reconstruct_program, 'originalSampler'),
       gl.getUniformLocation(reconstruct_program, 'layer1Sampler'),
+      gl.getUniformLocation(reconstruct_program, 'layer2Sampler'),
     ],
-    textures: [input_texture, conv2_2_texture],
+    textures: [input_texture, conv2_2_texture1, conv2_2_texture2],
     weights: get_reconstruct_weights(),
     biases: get_reconstruct_biases(),
     rgbBiases: true,
@@ -1191,29 +1201,30 @@ export function main(player, canvas) {
     // Padded input
     pad_texture = createTexture(gl, videoWidth + 8, videoHeight + 8, true);
 
-    // W_conv1_1: in 648x294x3 out 648x290x8
     conv1_1_texture1 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
     conv1_1_texture2 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
+    conv1_1_texture3 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
+    conv1_1_texture4 = createTexture(gl, videoWidth + 8, videoHeight + 4, true);
 
-    // W_conv1_2: in 648x290x8 out 644x290x8
     conv1_2_texture1 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
     conv1_2_texture2 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
+    conv1_2_texture3 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
+    conv1_2_texture4 = createTexture(gl, videoWidth + 4, videoHeight + 4, true);
 
-    // W_conv2_1: in 644x290x8 out 644x288x4
-    conv2_1_texture = createTexture(gl, videoWidth + 4, videoHeight + 2, true);
+    conv2_1_texture1 = createTexture(gl, videoWidth + 4, videoHeight + 2, true);
+    conv2_1_texture2 = createTexture(gl, videoWidth + 4, videoHeight + 2, true);
 
-    // W_conv2_2: in 644x288x4 out 642x288x4
-    conv2_2_texture = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
+    conv2_2_texture1 = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
+    conv2_2_texture2 = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
 
-    // W_reconstruct: in 642x288x4 out 1920x858x3
     reconstruct_texture = createTexture(gl, videoWidth * 3, videoHeight * 3, true);
 
     // Update Texture References
     conv1_1_program_info.textures = [pad_texture];
-    conv1_2_program_info.textures = [conv1_1_texture1, conv1_1_texture2];
-    conv2_1_program_info.textures = [conv1_2_texture1, conv1_2_texture2];
-    conv2_2_program_info.textures = [conv2_1_texture];
-    reconstruct_program_info.textures = [input_texture, conv2_2_texture];
+    conv1_2_program_info.textures = [conv1_1_texture1, conv1_1_texture2, conv1_1_texture3, conv1_1_texture4];
+    conv2_1_program_info.textures = [conv1_2_texture1, conv1_2_texture2, conv1_2_texture3, conv1_2_texture4];
+    conv2_2_program_info.textures = [conv2_1_texture1, conv2_1_texture2];
+    reconstruct_program_info.textures = [input_texture, conv2_2_texture1, conv2_2_texture2];
     render_program_info.textures = [reconstruct_texture];
   });
 
@@ -1277,9 +1288,10 @@ export function main(player, canvas) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, w_conv1_1_fb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, conv1_1_texture1, 0);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, conv1_1_texture2, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, conv1_1_texture3, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT3, gl.TEXTURE_2D, conv1_1_texture4, 0);
     gl.drawBuffers([
-      gl.COLOR_ATTACHMENT0, // gl_FragData[0]
-      gl.COLOR_ATTACHMENT1, // gl_FragData[1]
+      gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1, gl.COLOR_ATTACHMENT2, gl.COLOR_ATTACHMENT3
     ]);
     gl.viewport(0, 0, videoWidth + 8, videoHeight + 4);
 
@@ -1292,9 +1304,13 @@ export function main(player, canvas) {
     gl.bindFramebuffer(gl.FRAMEBUFFER, w_conv1_2_fb);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, conv1_2_texture1, 0);
     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, conv1_2_texture2, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT2, gl.TEXTURE_2D, conv1_2_texture3, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT3, gl.TEXTURE_2D, conv1_2_texture4, 0);
     gl.drawBuffers([
-      gl.COLOR_ATTACHMENT0, // gl_FragData[0]
-      gl.COLOR_ATTACHMENT1, // gl_FragData[1]
+      gl.COLOR_ATTACHMENT0,
+      gl.COLOR_ATTACHMENT1,
+      gl.COLOR_ATTACHMENT2,
+      gl.COLOR_ATTACHMENT3,
     ]);
     gl.viewport(0, 0, videoWidth + 4, videoHeight + 4);
 
@@ -1305,9 +1321,11 @@ export function main(player, canvas) {
     // out: 644x288x4
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, w_conv2_1_fb);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, conv2_1_texture, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, conv2_1_texture1, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, conv2_1_texture2, 0);
     gl.drawBuffers([
-      gl.COLOR_ATTACHMENT0, // gl_FragData[0]
+      gl.COLOR_ATTACHMENT0,
+      gl.COLOR_ATTACHMENT1,
     ]);
     gl.viewport(0, 0, videoWidth + 4, videoHeight + 2);
 
@@ -1319,9 +1337,11 @@ export function main(player, canvas) {
     // out: 642x288x4
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, w_conv2_2_fb);
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, conv2_2_texture, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, conv2_2_texture1, 0);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, conv2_2_texture2, 0);
     gl.drawBuffers([
-      gl.COLOR_ATTACHMENT0, // gl_FragData[0]
+      gl.COLOR_ATTACHMENT0,
+      gl.COLOR_ATTACHMENT1,
     ]);
     gl.viewport(0, 0, videoWidth + 2, videoHeight + 2);
 

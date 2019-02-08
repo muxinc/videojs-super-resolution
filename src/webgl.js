@@ -606,8 +606,8 @@ ${weights.join("\n")}
     // Operations
 ${operations.join("\n")}
 
-    out0.rgb = (vec3(r_val, g_val, b_val) + biases[3 * iOutY + iOutX].rgb) / 255.0 + 0.5;
-    //out0.rgb += texture(originalSampler, vec2(gl_FragCoord[0] / (videoRes.x * 3.0), gl_FragCoord[1] / (videoRes.y * 3.0))).rgb;
+    out0.rgb = (vec3(r_val, g_val, b_val) + biases[3 * iOutY + iOutX].rgb) / 255.0;
+    out0.rgb += texture(originalSampler, vec2(gl_FragCoord[0] / (videoRes.x * 3.0), gl_FragCoord[1] / (videoRes.y * 3.0))).rgb;
     out0.rgb = clamp(out0.rgb, 0.0, 1.0);
   }
   `;
@@ -747,7 +747,6 @@ function initTexture(gl) {
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
   gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
-  /*
   const image = new Image();
   image.onload = function() {
     loaded_count++;
@@ -760,8 +759,7 @@ function initTexture(gl) {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
   };
-  image.src = "test_data/tos_1700_360p.png";
-  */
+  image.src = "tos_01050.png";
 
   return texture;
 }
@@ -1069,7 +1067,7 @@ export function main(player, canvas) {
   };
 
   console.log("conv1_2 program");
-  const conv1_2_program = init_conv1_2_program(gl, 648, 290);
+  const conv1_2_program = init_conv1_2_program(gl);
   const conv1_2_program_info = {
     program: conv1_2_program,
     attribLocations: {
@@ -1248,7 +1246,7 @@ export function main(player, canvas) {
   // Draw the scene repeatedly
   function render(now) {
     if (copyVideo) {
-      updateTexture(gl, input_texture, video);
+      //updateTexture(gl, input_texture, video);
     }
     resizeCanvas(canvas);
 
@@ -1296,6 +1294,45 @@ export function main(player, canvas) {
     gl.viewport(0, 0, videoWidth + 8, videoHeight + 4);
 
     drawScene(gl, conv1_1_program_info, buffers);
+
+    console.log("CONV1_1");
+    var w = videoWidth + 8;
+    var h = videoHeight + 4;
+    gl.readBuffer(gl.COLOR_ATTACHMENT0);
+    var pixels0 = new Float32Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixels0);
+    gl.readBuffer(gl.COLOR_ATTACHMENT1);
+    var pixels1 = new Float32Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixels1);
+    gl.readBuffer(gl.COLOR_ATTACHMENT2);
+    var pixels2 = new Float32Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixels2);
+    gl.readBuffer(gl.COLOR_ATTACHMENT3);
+    var pixels3 = new Float32Array(w * h * 4);
+    gl.readPixels(0, 0, w, h, gl.RGBA, gl.FLOAT, pixels3);
+
+    for (var readY = (h - 99); readY > (h - 102); readY--) {
+      for (var readX = 99; readX < 102; readX++) {
+        var vals = [];
+        vals.push(pixels0[readY * w * 4 + readX * 4 + 0]);
+        vals.push(pixels0[readY * w * 4 + readX * 4 + 1]);
+        vals.push(pixels0[readY * w * 4 + readX * 4 + 2]);
+        vals.push(pixels0[readY * w * 4 + readX * 4 + 3]);
+        vals.push(pixels1[readY * w * 4 + readX * 4 + 0]);
+        vals.push(pixels1[readY * w * 4 + readX * 4 + 1]);
+        vals.push(pixels1[readY * w * 4 + readX * 4 + 2]);
+        vals.push(pixels1[readY * w * 4 + readX * 4 + 3]);
+        vals.push(pixels2[readY * w * 4 + readX * 4 + 0]);
+        vals.push(pixels2[readY * w * 4 + readX * 4 + 1]);
+        vals.push(pixels2[readY * w * 4 + readX * 4 + 2]);
+        vals.push(pixels2[readY * w * 4 + readX * 4 + 3]);
+        vals.push(pixels3[readY * w * 4 + readX * 4 + 0]);
+        vals.push(pixels3[readY * w * 4 + readX * 4 + 1]);
+        vals.push(pixels3[readY * w * 4 + readX * 4 + 2]);
+        vals.push(pixels3[readY * w * 4 + readX * 4 + 3]);
+        console.log(`conv1_1 ${readY}_${readX}`, vals);
+      }
+    }
 
     // Apply W_conv1_2, relu and bias
     // in: 648x290x8

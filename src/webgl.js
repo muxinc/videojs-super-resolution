@@ -585,10 +585,10 @@ function init_reconstruct_program(gl) {
   uniform vec4 weights[${3 * 3 * 3 * 9 * 2}];
   uniform vec3 biases[9];
 
-  out vec4 out0;
+  out vec4 final_out;
 
   void main() {
-    out0 = vec4(0.0, 0.0, 0.0, 1.0);
+    vec4 out0 = vec4(0.0, 0.0, 0.0, 1.0);
     float r_val = 0.0;
     float g_val = 0.0;
     float b_val = 0.0;
@@ -617,6 +617,8 @@ ${operations.join("\n")}
     out0.rgb = (vec3(r_val, g_val, b_val) + biases[3 * iOutY + iOutX].rgb) / 255.0;
     out0.rgb += texture(originalSampler, vec2(gl_FragCoord[0] / (videoRes.x * 3.0), gl_FragCoord[1] / (videoRes.y * 3.0))).rgb;
     out0.rgb = clamp(out0.rgb, 0.0, 1.0);
+
+    final_out = out0;
   }
   `;
 
@@ -684,7 +686,7 @@ function initBuffers(gl) {
   };
 }
 
-function createTexture(gl, width, height) {
+function createTexture(gl, width, height, float) {
   // create to render to
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -692,10 +694,18 @@ function createTexture(gl, width, height) {
   {
     // define size and format of level 0
     const level = 0;
-    const internalFormat = gl.RGBA16F;
     const border = 0;
     const format = gl.RGBA;
-    const type = gl.FLOAT;
+    var internalFormat;
+    var type;
+
+    if (float) {
+      internalFormat = gl.RGBA16F;
+      type = gl.FLOAT;
+    } else {
+      internalFormat = gl.RGBA;
+      type = gl.UNSIGNED_BYTE;
+    }
     const data = null;
     gl.texImage2D(
       gl.TEXTURE_2D,
@@ -711,16 +721,6 @@ function createTexture(gl, width, height) {
 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-
-    /*
-    if (nearest) {
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-    } else {
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-    }
-    */
   }
 
   return texture;
@@ -958,8 +958,11 @@ function drawScene(gl, programInfo, buffers, texture) {
 
 function resizeCanvas(canvas) {
   // Lookup the size the browser is displaying the canvas.
-  var displayWidth  = Math.floor(canvas.clientWidth * window.devicePixelRatio);
-  var displayHeight = Math.floor(canvas.clientHeight * window.devicePixelRatio);
+  //var displayWidth  = Math.floor(canvas.clientWidth * window.devicePixelRatio);
+  //var displayHeight = Math.floor(canvas.clientHeight * window.devicePixelRatio);
+
+  var displayWidth  = canvas.clientWidth;
+  var displayHeight = canvas.clientHeight;
 
   // Check if the canvas is not the same size.
   if (canvas.width  != displayWidth ||
@@ -1035,8 +1038,12 @@ export function main(player, canvas, options) {
     gl.getExtension('OES_texture_float') ||
     gl.getExtension('MOZ_OES_texture_float') ||
     gl.getExtension('WEBKIT_OES_texture_float');
+  gl.getExtension('OES_texture_half_float') ||
+    gl.getExtension('MOZ_OES_texture_half_float') ||
+    gl.getExtension('WEBKIT_OES_texture_half_float');
   gl.getExtension('EXT_color_buffer_float');
   gl.getExtension('OES_texture_float_linear');
+  gl.getExtension('OES_texture_half_float_linear');
 
   // Initialize the textures
 
@@ -1064,7 +1071,7 @@ export function main(player, canvas, options) {
   var conv2_2_texture2 = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
 
   // W_reconstruct: in 642x288x4 out 1920x858x3
-  var reconstruct_texture = createTexture(gl, videoWidth * 3, videoHeight * 3, true);
+  var reconstruct_texture = createTexture(gl, videoWidth * 3, videoHeight * 3, false);
 
   console.log("pad program");
   const padProgram = initPadProgram(gl, 4);
@@ -1260,7 +1267,7 @@ export function main(player, canvas, options) {
     conv2_2_texture1 = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
     conv2_2_texture2 = createTexture(gl, videoWidth + 2, videoHeight + 2, true);
 
-    reconstruct_texture = createTexture(gl, videoWidth * 3, videoHeight * 3, true);
+    reconstruct_texture = createTexture(gl, videoWidth * 3, videoHeight * 3, false);
 
     // Update Texture References
     conv1_1_program_info.textures = [pad_texture];

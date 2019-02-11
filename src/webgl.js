@@ -347,8 +347,8 @@ function init_conv1_2_program(gl) {
 
   var conv1_2_shader = `#version 300 es
 
-  precision highp float;
-  precision highp sampler2D;
+  precision mediump float;
+  precision mediump sampler2D;
 
   uniform sampler2D layer1Sampler;
   uniform sampler2D layer2Sampler;
@@ -959,8 +959,11 @@ function drawScene(gl, programInfo, buffers, texture) {
 
 function resizeCanvas(canvas) {
   // Lookup the size the browser is displaying the canvas.
-  var displayWidth  = Math.floor(canvas.clientWidth * window.devicePixelRatio);
-  var displayHeight = Math.floor(canvas.clientHeight * window.devicePixelRatio);
+  //var displayWidth  = Math.floor(canvas.clientWidth * window.devicePixelRatio);
+  //var displayHeight = Math.floor(canvas.clientHeight * window.devicePixelRatio);
+
+  var displayWidth  = canvas.clientWidth;
+  var displayHeight = canvas.clientHeight;
 
   // Check if the canvas is not the same size.
   if (canvas.width  != displayWidth ||

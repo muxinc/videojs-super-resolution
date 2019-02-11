@@ -685,7 +685,7 @@ function initBuffers(gl) {
   };
 }
 
-function createTexture(gl, width, height, nearest) {
+function createTexture(gl, width, height) {
   // create to render to
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
@@ -693,7 +693,7 @@ function createTexture(gl, width, height, nearest) {
   {
     // define size and format of level 0
     const level = 0;
-    const internalFormat = gl.RGBA32F;
+    const internalFormat = gl.RGBA16F;
     const border = 0;
     const format = gl.RGBA;
     const type = gl.FLOAT;
@@ -1412,8 +1412,6 @@ export function main(player, canvas) {
       gl.COLOR_ATTACHMENT3,
     ]);
     gl.viewport(0, 0, videoWidth + 4, videoHeight + 4);
-
-    console.log("conv1_2 viewport shape:", videoWidth + 4, videoHeight + 4);
 
     drawScene(gl, conv1_2_program_info, buffers);
 

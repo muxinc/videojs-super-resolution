@@ -1,5 +1,4 @@
 import { mat4 } from 'gl-matrix';
-import { raw_weights } from './weights';
 
 /**
  * Weights functions
@@ -13,7 +12,7 @@ const layer_2_width = 3;
 
 const reconstruct_width = 3;
 
-function get_conv1_1_weights() {
+function get_conv1_1_weights(raw_weights) {
   var conv1_1_weights = [];
 
   for (var y = 0; y < layer_1_width; y++) {
@@ -27,7 +26,7 @@ function get_conv1_1_weights() {
   return conv1_1_weights;
 }
 
-function get_conv1_2_weights() {
+function get_conv1_2_weights(raw_weights) {
   var conv1_2_weights = [];
 
   for (var x = 0; x < layer_1_width; x++) {
@@ -41,11 +40,11 @@ function get_conv1_2_weights() {
   return conv1_2_weights;
 }
 
-function get_conv1_biases() {
+function get_conv1_biases(raw_weights) {
   return raw_weights["b_conv1"];
 }
 
-function get_conv2_1_weights() {
+function get_conv2_1_weights(raw_weights) {
   var conv2_1_weights = [];
 
   for (var y = 0; y < layer_2_width; y++) {
@@ -59,7 +58,7 @@ function get_conv2_1_weights() {
   return conv2_1_weights;
 }
 
-function get_conv2_2_weights() {
+function get_conv2_2_weights(raw_weights) {
   var conv2_2_weights = [];
 
   for (var x = 0; x < layer_2_width; x++) {
@@ -73,14 +72,14 @@ function get_conv2_2_weights() {
   return conv2_2_weights;
 }
 
-function get_conv2_biases() {
+function get_conv2_biases(raw_weights) {
   return raw_weights["b_conv2"];
 }
 
 /**
  * XXX: These weights organized differently to enable vec4 dot product
  */
-function get_reconstruct_weights() {
+function get_reconstruct_weights(raw_weights) {
   var conv_reconstruct_weights = [];
 
   for (var out_y = 0; out_y < 3; out_y++) {
@@ -100,7 +99,7 @@ function get_reconstruct_weights() {
   return conv_reconstruct_weights;
 }
 
-function get_reconstruct_biases() {
+function get_reconstruct_biases(raw_weights) {
   return raw_weights["b_reconstruct"];
 }
 
@@ -1008,7 +1007,7 @@ function scaleToFit(videoWidth, videoHeight, canvasWidth, canvasHeight) {
 //
 // Start here
 //
-export function main(player, canvas) {
+export function main(player, canvas, options) {
   const video = player.tech().el();
   const gl = canvas.getContext('webgl2');
   var videoHeight = video.videoHeight || 286;
@@ -1103,7 +1102,7 @@ export function main(player, canvas) {
     samplers: [gl.getUniformLocation(conv1_1_program, 'padSampler')],
     textures: [pad_texture],
     filters: [gl.NEAREST],
-    weights: get_conv1_1_weights(),
+    weights: get_conv1_1_weights(options.weights),
     rgbWeights: true,
     videoRes: videoRes
   };
@@ -1130,8 +1129,8 @@ export function main(player, canvas) {
     ],
     textures: [conv1_1_texture1, conv1_1_texture2, conv1_1_texture3, conv1_1_texture4],
     filters: [gl.NEAREST, gl.NEAREST, gl.NEAREST, gl.NEAREST],
-    weights: get_conv1_2_weights(),
-    biases: get_conv1_biases(),
+    weights: get_conv1_2_weights(options.weights),
+    biases: get_conv1_biases(options.weights),
     videoRes: videoRes
   };
 
@@ -1156,7 +1155,7 @@ export function main(player, canvas) {
     ],
     textures: [conv1_2_texture1, conv1_2_texture2, conv1_2_texture3, conv1_2_texture4],
     filters: [gl.NEAREST, gl.NEAREST, gl.NEAREST, gl.NEAREST],
-    weights: get_conv2_1_weights(),
+    weights: get_conv2_1_weights(options.weights),
     videoRes: videoRes
   };
 
@@ -1180,8 +1179,8 @@ export function main(player, canvas) {
     ],
     textures: [conv2_1_texture1, conv2_1_texture2],
     filters: [gl.NEAREST, gl.NEAREST],
-    weights: get_conv2_2_weights(),
-    biases: get_conv2_biases(),
+    weights: get_conv2_2_weights(options.weights),
+    biases: get_conv2_biases(options.weights),
     videoRes: videoRes
   };
 
@@ -1205,9 +1204,9 @@ export function main(player, canvas) {
       gl.getUniformLocation(reconstruct_program, 'layer2Sampler'),
     ],
     textures: [input_texture, conv2_2_texture1, conv2_2_texture2],
-    weights: get_reconstruct_weights(),
+    weights: get_reconstruct_weights(options.weights),
     filters: [gl.LINEAR, gl.NEAREST, gl.NEAREST],
-    biases: get_reconstruct_biases(),
+    biases: get_reconstruct_biases(options.weights),
     rgbBiases: true,
     videoRes: videoRes
   };

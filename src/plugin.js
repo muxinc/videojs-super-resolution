@@ -39,7 +39,7 @@ class SuperResolution extends Plugin {
 
     this.player.ready(() => {
       this.player.addClass('vjs-super-resolution');
-      main(this.player, canvas);
+      main(this.player, canvas, this.options);
     });
   }
 

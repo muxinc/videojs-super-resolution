@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>videojs-super-resolution Demo</title>
+    <link href="node_modules/video.js/dist/video-js.css" rel="stylesheet" />
+    <link href="dist/videojs-super-resolution.css" rel="stylesheet" />
+  </head>
+  <body>
+    <video
+      id="videojs-super-resolution-player"
+      class="video-js vjs-default-skin"
+      controls
+      crossorigin="anonymous"
+    >
+      <source src="/tos_streaming_360p.mp4" type="video/mp4" />
+    </video>
+    <script src="dist/tos_weights.js"></script>
+    <script src="node_modules/video.js/dist/video.js"></script>
+    <script src="dist/videojs-super-resolution.js"></script>
+    <script>
+      (function(window, videojs) {
+        var examplePlayer = (window.examplePlayer = videojs(
+          'videojs-super-resolution-player'
+        ));
+        var superResolution = (window.superResolution = examplePlayer.superResolution({"weights": tos_weights}));
+      })(window, window.videojs);
+    </script>
+  </body>
+</html>

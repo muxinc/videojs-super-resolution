@@ -9,6 +9,7 @@ Make sure you have Node.js 8 or higher and npm installed.
 1. Fork this repository and clone your fork
 1. Install dependencies: `npm install`
 1. Run a development server: `npm start`
+1. The test page should be available at http://localhost:9999
 
 ### Making Changes
 

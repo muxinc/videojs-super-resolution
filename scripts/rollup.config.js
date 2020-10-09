@@ -14,7 +14,6 @@ const options = {
                 "node_modules/video.js/dist/video-js.css",
                 "node_modules/video.js/dist/video.min.js",
                 "node_modules/videojs-mux/dist/videojs-mux.js",
-                "weights/*",
               ],
               dest: "dist"
             }

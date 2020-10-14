@@ -2,6 +2,17 @@
 
 Super resolution is super!
 
+## Local development
+
+```sh
+# Set NPM version
+nvm use
+
+npm install
+npm start
+# Demo available at http://localhost:9999
+```
+
 ## Installation
 
 ```sh

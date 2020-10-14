@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <title>videojs-super-resolution Demo</title>
-    <link href="dist/video-js.css" rel="stylesheet" />
-    <link href="dist/videojs-super-resolution.css" rel="stylesheet" />
+    <link href="/dist/video-js.css" rel="stylesheet" />
+    <link href="/dist/videojs-super-resolution.css" rel="stylesheet" />
   </head>
   <body>
     <video
@@ -13,12 +13,12 @@
       controls
       crossorigin="anonymous"
     >
-      <source src="witcher3_360p_capped_crf24.mp4" type="video/mp4" />
+      <source src="gtav_360p_capped_crf24.mp4" type="video/mp4" />
     </video>
-    <script src="dist/witcher3_weights.js"></script>
-    <script src="dist/video.min.js"></script>
-    <script src="dist/videojs-mux.js"></script>
-    <script src="dist/videojs-super-resolution.min.js"></script>
+    <script src="/weights/gtav_weights.js"></script>
+    <script src="/dist/video.min.js"></script>
+    <script src="/dist/videojs-mux.js"></script>
+    <script src="/dist/videojs-super-resolution.js"></script>
     <script>
       (function(window, videojs) {
         var examplePlayer = (window.examplePlayer = videojs(
@@ -32,13 +32,13 @@
 
                   // Metadata
                   player_name: "Nick's test playa", // ex: 'My Main Player'
-                  video_title: "witcher3"
+                  video_title: "gtav"
                 }
               }
             }
           }
         ));
-        var superResolution = (window.superResolution = examplePlayer.superResolution({"weights": witcher3_weights}));
+        var superResolution = (window.superResolution = examplePlayer.superResolution({"weights": gtav_weights}));
       })(window, window.videojs);
     </script>
   </body>

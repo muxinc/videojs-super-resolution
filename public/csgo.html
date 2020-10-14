@@ -3,8 +3,8 @@
   <head>
     <meta charset="utf-8" />
     <title>videojs-super-resolution Demo</title>
-    <link href="dist/video-js.css" rel="stylesheet" />
-    <link href="dist/videojs-super-resolution.css" rel="stylesheet" />
+    <link href="/dist/video-js.css" rel="stylesheet" />
+    <link href="/dist/videojs-super-resolution.css" rel="stylesheet" />
   </head>
   <body>
     <video
@@ -15,10 +15,10 @@
     >
       <source src="csgo_360p_capped_crf24.mp4" type="video/mp4" />
     </video>
-    <script src="dist/csgo_weights.js"></script>
-    <script src="dist/video.min.js"></script>
-    <script src="dist/videojs-mux.js"></script>
-    <script src="dist/videojs-super-resolution.min.js"></script>
+    <script src="/weights/csgo_weights.js"></script>
+    <script src="/dist/video.min.js"></script>
+    <script src="/dist/videojs-mux.js"></script>
+    <script src="/dist/videojs-super-resolution.js"></script>
     <script>
       (function(window, videojs) {
         var examplePlayer = (window.examplePlayer = videojs(

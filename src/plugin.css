@@ -28,12 +28,14 @@ html, body {
 
   & .vjs-sr-demo-handle {
     height: 30px;
-    width: 10px;
+    width: 12px;
     background-color: #fff;
     position: absolute;
     top: 50%;
     left: calc(50% - 5px);
     z-index: 10;
+    border: 2px solid black;
+    cursor: ew-resize;
   }
 
   & .vjs-sr-demo-container {

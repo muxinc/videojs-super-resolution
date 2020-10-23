@@ -33,3 +33,5 @@ test/dist/
 .yo-rc.json
 
 tos_streaming_360p.mp4
+
+__pycache__

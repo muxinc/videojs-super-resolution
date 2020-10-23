@@ -6,6 +6,10 @@ import nn_model
 import nn_utils
 import random
 
+scale_factor = 3
+input_w = 1920
+input_h = 1080
+
 def create_dataset(filenames, h=1080, w=1920, scale_factor=3):
     dataset = tf.data.Dataset.from_tensor_slices(filenames)
     dataset = dataset.shuffle(10000)
@@ -42,12 +46,11 @@ if __name__ == "__main__":
     scaled_dirname = sys.argv[3]
     low_res_dirname = sys.argv[4]
 
-    scale_factor = 3
     scaler_model = nn_model.NNScaler(scale_factor)
 
     # Training
     filenames = nn_utils.load_filenames(ref_dirname, scaled_dirname, low_res_dirname)
-    dataset = create_dataset(filenames)
+    dataset = create_dataset(filenames, input_h, input_w, scale_factor)
 
     iterator = dataset.make_initializable_iterator()
     reference, scaled_img, low_res_img, ref_name, scaled_name, low_res_name = iterator.get_next()
@@ -66,7 +69,7 @@ if __name__ == "__main__":
     random.seed(5)
     validation_filenames = nn_utils.load_validation(ref_dirname, scaled_dirname, low_res_dirname)
     print(validation_filenames)
-    validation_set = create_validation(validation_filenames)
+    validation_set = create_validation(validation_filenames, input_h, input_w, scale_factor)
 
     validation_iterator = validation_set.make_initializable_iterator()
     validate_reference, validate_scaled, validate_low_res, ref_name, scaled_name, low_res_name = validation_iterator.get_next()

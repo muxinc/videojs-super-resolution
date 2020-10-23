@@ -5,6 +5,7 @@ import sys, os
 import nn_model
 import nn_utils
 import random
+import signal
 
 scale_factor = 3
 input_w = 1920
@@ -37,14 +38,16 @@ def create_validation(filenames, h=1080, w=1920, scale_factor=3):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: train.py name reference_dir scaled_dir low_res_dir")
+    if len(sys.argv) != 3:
+        print("Usage: train.py model_name num_epochs")
         sys.exit(1)
 
     model_name = sys.argv[1]
-    ref_dirname = sys.argv[2]
-    scaled_dirname = sys.argv[3]
-    low_res_dirname = sys.argv[4]
+    num_epochs = int(sys.argv[2])
+
+    ref_dirname = os.path.join(model_name, "reference")
+    scaled_dirname = os.path.join(model_name, "scaled")
+    low_res_dirname = os.path.join(model_name, "low_res")
 
     scaler_model = nn_model.NNScaler(scale_factor)
 
@@ -94,20 +97,39 @@ if __name__ == "__main__":
         # TODO: option for fresh training or more training
         #saver.restore(sess, "./{}_scaler_model.ckpt".format(model_name))
 
-        for step in range(0, 100000):
+        interrupted_training = False
+
+        def interrupt_training(signum, frame):
+            print("Ending training on next loop...")
+            global interrupted_training
+            interrupted_training = True
+
+        signal.signal(signal.SIGINT, interrupt_training)
+
+        for step in range(0, num_epochs):
             try:
                 sess.run(training_op)
+                print("Step {}".format(step))
             except:
-                print("Epoch finished!")
+                print("Epoch finished {}".format(step))
                 sess.run(iterator.initializer)
                 sess.run(training_op)
 
-            if (step % 100) == 0:
+            if ((step % 100) == 0) or interrupted_training:
                 saver.save(sess, "./{}_scaler_model.ckpt".format(model_name))
                 sess.run(validation_iterator.initializer)
                 results = sess.run([psnr_validate, psnr_linear, ssim_validate, ssim_linear, ms_ssim_validate, ms_ssim_linear, ref_name, scaled_name, low_res_name])
 
-                print(step)
                 print("PSNR  SSIM  MS_SSIM")
                 for i in range(len(results[0])):
                     print("{:0.2f} / {:0.2f} {:0.2f} / {:0.2f} {:0.2f} / {:0.2f}".format(results[0][i], results[1][i], results[2][i], results[3][i], results[4][i], results[5][i]))
+
+            if interrupted_training:
+                break;
+
+        weights_filename = model_name + "_weights.json"
+        with open(weights_filename, "w") as f:
+            f.write(scaler_model.dump_weights())
+        print("Weights written to " + weights_filename)
+
+    print("done!")

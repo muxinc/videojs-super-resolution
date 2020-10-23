@@ -13,9 +13,9 @@ INPUT_VIDEO=$1
 BASE=`basename $INPUT_VIDEO`
 VIDEO_EXT="${BASE##*.}"
 OUTPUT_DIR="${BASE%.*}"
-REF_DIR=${OUTPUT_DIR}/reference_dir
-LOW_RES_DIR=${OUTPUT_DIR}/low_res_dir
-SCALED_DIR=${OUTPUT_DIR}/scaled_dir
+REF_DIR=${OUTPUT_DIR}/reference
+LOW_RES_DIR=${OUTPUT_DIR}/low_res
+SCALED_DIR=${OUTPUT_DIR}/scaled
 
 FULL_RES="1920:1080"
 LOW_RES="640:360"

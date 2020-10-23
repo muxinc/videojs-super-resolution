@@ -31,7 +31,7 @@ class NNScaler:
             "b_reconstruct": self.b_reconstruct.eval().tolist()
         }
 
-        print(json.dumps(scale_vars, indent=2, sort_keys=True))
+        return json.dumps(scale_vars, indent=2, sort_keys=True)
 
 
     # input_tensor: rgb uint8 image

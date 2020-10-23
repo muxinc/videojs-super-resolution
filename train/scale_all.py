@@ -16,14 +16,14 @@ def load_pngs(height, width, scale_factor, scaled_name, low_res_name, output_nam
     return scaled_img, low_res_img, output_name
 
 if __name__ == "__main__":
-    if len(sys.argv) != 5:
-        print("Usage: run.py model_name scaled_dir low_res_dir output_dir")
+    if len(sys.argv) != 2:
+        print("Usage: run.py model_name")
         sys.exit(1)
 
     model_name = sys.argv[1]
-    scaled_dir = sys.argv[2]
-    low_res_dir = sys.argv[3]
-    output_dir = sys.argv[4]
+    scaled_dir = os.path.join(model_name, "scaled")
+    low_res_dir = os.path.join(model_name, "low_res")
+    output_dir = os.path.join(model_name, "output")
 
     print("Scaling all files from {} and {} to {}".format(scaled_dir, low_res_dir, output_dir))
 

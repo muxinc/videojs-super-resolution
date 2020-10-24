@@ -127,9 +127,11 @@ if __name__ == "__main__":
             if interrupted_training:
                 break;
 
-        weights_filename = model_name + "_weights.json"
+        weights_filename = model_name + "_weights.js"
         with open(weights_filename, "w") as f:
+            f.write("var " + model_name + " = ")
             f.write(scaler_model.dump_weights())
+            f.write(";")
         print("Weights written to " + weights_filename)
 
     print("done!")

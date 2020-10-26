@@ -28,7 +28,7 @@ DEFAULT_FLAGS="-hide_banner -loglevel warning -y"
 echo "Splitting video into images..."
 
 # Split input_video into pngs, labelled 0001.png, 0002.png etc, where -r 1 specifies 1 frame per second
-ffmpeg ${DEFAULT_FLAGS} -i ${INPUT_VIDEO} -r 1 ${REF_DIR}/%04d.png
+ffmpeg ${DEFAULT_FLAGS} -i ${INPUT_VIDEO} -r 10 ${REF_DIR}/%04d.png
 
 echo "Downscaling images..."
 

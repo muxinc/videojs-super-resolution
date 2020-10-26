@@ -129,7 +129,7 @@ if __name__ == "__main__":
 
         weights_filename = model_name + "_weights.js"
         with open(weights_filename, "w") as f:
-            f.write("var " + model_name + " = ")
+            f.write("var " + model_name + "_weights = ")
             f.write(scaler_model.dump_weights())
             f.write(";")
         print("Weights written to " + weights_filename)

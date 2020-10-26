@@ -13,6 +13,10 @@ npm start
 # Demo available at http://localhost:9999
 ```
 
+## Generating weights for your own videos
+
+See [train/README.md](./train/README.md)
+
 ## Installation
 
 ```sh

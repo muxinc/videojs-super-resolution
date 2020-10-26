@@ -32,18 +32,16 @@ data "http" "my_ip" {
 }
 
 resource "aws_instance" "super_res" {
+  # Ubuntu 18 Deep Learning AMI
   ami           = "ami-01aad86525617098d"
-  instance_type = "g3s.xlarge"
+  instance_type = "g4dn.2xlarge"
 
   key_name = aws_key_pair.login.key_name
 
   associate_public_ip_address = true
   vpc_security_group_ids = [aws_security_group.super_res.id]
 
-  root_block_device {
-    volume_type = "gp2"
-    volume_size = "100"
-  }
+  user_data = file("./user_data.sh")
 
   tags = local.tags
   volume_tags = local.tags

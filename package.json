@@ -14,7 +14,7 @@
   "scripts": {
     "prebuild": "npm run clean",
     "build": "npm-run-all -p build:*",
-    "build:css": "postcss -o dist/videojs-super-resolution.css --config scripts/postcss.config.js src/plugin.css",
+    "build:css": "cat src/plugin.css src/styles.css | postcss -o dist/videojs-super-resolution.css --config scripts/postcss.config.js ",
     "build:js": "rollup -c scripts/rollup.config.js",
     "clean": "shx rm -rf ./dist ./test/dist",
     "postclean": "shx mkdir -p ./dist ./test/dist",

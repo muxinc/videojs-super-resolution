@@ -4,18 +4,52 @@
     <meta charset="utf-8" />
     <title>videojs-super-resolution Demo</title>
     <link href="/dist/video-js.css" rel="stylesheet" />
+    <link href="../src/styles.css" rel="stylesheet" />
     <link href="/dist/videojs-super-resolution.css" rel="stylesheet" />
   </head>
-  <body>
-    <video
-      style="height:100%"
-      id="videojs-super-resolution-player"
-      class="video-js vjs-default-skin"
-      controls
-      crossorigin="anonymous"
-    >
-      <source src="dogs_playing_1080p.mp4" type="video/mp4" />
-    </video>
+  <body class="demo-body">
+    <div class="header-section">
+      <div class="logo-wrapper">
+        <a href="/">
+          <img src="./images/rspacelogo.svg" alt="redspace logo" height="100" width="100" />
+        </a>
+      </div>
+    </div>
+    <h1>Dogs playing (original 1080p source video)</h1>
+    <div class="content">
+      <div class="video-wrapper">
+        <video
+          style="height:100%"
+          id="videojs-super-resolution-player"
+          class="video-js vjs-default-skin vjs-big-play-centered
+          vjs-matrix"
+          controls
+          crossorigin="anonymous"
+        >
+          <source src="dogs_playing_1080p.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div class="images-list">
+        <div class="screenshots-title">
+          Screencaps
+        </div>
+        <div class="downscaled">
+          <h4>1080p</h4>
+          <ul>
+            <li class="image-link"><a href="./images/dogs/1080/0001.png">0001</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0002.png">0002</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0003.png">0003</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0004.png">0004</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0005.png">0005</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0006.png">0006</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0007.png">0007</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0008.png">0008</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0009.png">0009</a></li>
+            <li class="image-link"><a href="./images/dogs/1080/0010.png">0010</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
     <script src="/dist/video.min.js"></script>
     <script>
       (function(window, videojs) {

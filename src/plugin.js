@@ -68,29 +68,6 @@ class SuperResolution extends Plugin {
     this.player.el().insertBefore(this.sliderHandle, this.container);
     const { left } = this.sliderHandle.getBoundingClientRect();
 
-    this.sliderHandle.onmousedown = e => {
-      e = e || window.event;
-      let start = left;
-      if (e.pageX) start = e.pageX;
-      else if (e.clientX) start = e.clientX;
-
-      document.body.onmousemove = e => {
-        e = e || window.event;
-        let end = 0;
-        if (e.pageX) end = e.pageX;
-        else if (e.clientX) end = e.clientX;
-
-        this.sliderHandle.style.left = `${end -
-          this.sliderHandle.offsetWidth / 2}px`;
-        this.resizeContainer(end);
-      };
-
-      document.body.onmouseup = () => {
-        // do something with the action here
-        // elem has been moved by diff pixels in the X axis
-        document.body.onmousemove = document.body.onmouseup = null;
-      };
-    };
   }
 }
 
